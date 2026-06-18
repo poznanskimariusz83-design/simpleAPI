@@ -15,72 +15,124 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Mock customer data
-const mockCustomer = {
-  nrKlienta: "KL-2024-001234",
-  imie: "Jan",
-  nazwisko: "Kowalski",
-  email: "jan.kowalski@example.com",
-  telefon: "+48 123 456 789",
-  adres: {
-    ulica: "ul. Pulaskiego 12",
-    miasto: "Warszawa",
-    kodPocztowy: "00-123",
-    kraj: "Polska"
+// Mock customer data - baza klientów
+const mockCustomers = {
+  "KL-001": {
+    nrKlienta: "KL-001",
+    imie: "Jan",
+    nazwisko: "Kowalski",
+    email: "jan.kowalski@example.com",
+    telefon: "+48 123 456 789",
+    adres: {
+      ulica: "ul. Pulaskiego 12",
+      miasto: "Warszawa",
+      kodPocztowy: "00-123",
+      kraj: "Polska"
+    },
+    produkty: [
+      {
+        id: "PROD-001",
+        nazwa: "Pakiet Basic",
+        opis: "Podstawowy pakiet usług",
+        cena: 99.99,
+        waluta: "PLN",
+        dataZakupu: "2024-01-15"
+      },
+      {
+        id: "PROD-002",
+        nazwa: "Pakiet Premium",
+        opis: "Zaawansowany pakiet z dodatkowymi funkcjami",
+        cena: 299.99,
+        waluta: "PLN",
+        dataZakupu: "2024-02-20"
+      }
+    ],
+    uslugi: [
+      {
+        id: "USL-001",
+        nazwa: "Wsparcie 24/7",
+        opis: "Całodobowe wsparcie techniczne",
+        status: "aktywna",
+        dataRozpoczecia: "2024-01-15"
+      },
+      {
+        id: "USL-002",
+        nazwa: "Backup i archiwizacja",
+        opis: "Automatyczne kopie zapasowe danych",
+        status: "aktywna",
+        dataRozpoczecia: "2024-02-01"
+      }
+    ],
+    dataDodania: "2024-01-10",
+    typ: "klient_indywidualny",
+    status: "aktywny"
   },
-  produkty: [
-    {
-      id: "PROD-001",
-      nazwa: "Pakiet Basic",
-      opis: "Podstawowy pakiet usług",
-      cena: 99.99,
-      waluta: "PLN",
-      dataZakupu: "2024-01-15"
+  "KL-002": {
+    nrKlienta: "KL-002",
+    imie: "Maria",
+    nazwisko: "Nowak",
+    email: "maria.nowak@example.com",
+    telefon: "+48 987 654 321",
+    adres: {
+      ulica: "ul. Marszałkowska 50",
+      miasto: "Kraków",
+      kodPocztowy: "31-223",
+      kraj: "Polska"
     },
-    {
-      id: "PROD-002",
-      nazwa: "Pakiet Premium",
-      opis: "Zaawansowany pakiet z dodatkowymi funkcjami",
-      cena: 299.99,
-      waluta: "PLN",
-      dataZakupu: "2024-02-20"
+    produkty: [
+      {
+        id: "PROD-003",
+        nazwa: "Pakiet Enterprise",
+        opis: "Pakiet dla dużych przedsiębiorstw",
+        cena: 999.99,
+        waluta: "PLN",
+        dataZakupu: "2024-03-10"
+      }
+    ],
+    uslugi: [
+      {
+        id: "USL-003",
+        nazwa: "Raportowanie analityczne",
+        opis: "Zaawansowane raporty i analizy",
+        status: "aktywna",
+        dataRozpoczecia: "2024-03-01"
+      }
+    ],
+    dataDodania: "2024-02-15",
+    typ: "klient_biznesowy",
+    status: "aktywny"
+  },
+  "KL-003": {
+    nrKlienta: "KL-003",
+    imie: "Piotr",
+    nazwisko: "Lewandowski",
+    email: "piotr.lew@example.com",
+    telefon: "+48 555 666 777",
+    adres: {
+      ulica: "ul. Główna 15",
+      miasto: "Gdańsk",
+      kodPocztowy: "80-001",
+      kraj: "Polska"
     },
-    {
-      id: "PROD-003",
-      nazwa: "Pakiet Enterprise",
-      opis: "Pakiet dla dużych przedsiębiorstw",
-      cena: 999.99,
-      waluta: "PLN",
-      dataZakupu: "2024-03-10"
-    }
-  ],
-  uslugi: [
-    {
-      id: "USL-001",
-      nazwa: "Wsparcie 24/7",
-      opis: "Całodobowe wsparcie techniczne",
-      status: "aktywna",
-      dataRozpoczecia: "2024-01-15"
-    },
-    {
-      id: "USL-002",
-      nazwa: "Backup i archiwizacja",
-      opis: "Automatyczne kopie zapasowe danych",
-      status: "aktywna",
-      dataRozpoczecia: "2024-02-01"
-    },
-    {
-      id: "USL-003",
-      nazwa: "Raportowanie analityczne",
-      opis: "Zaawansowane raporty i analizy",
-      status: "zawieszena",
-      dataRozpoczecia: "2024-03-01"
-    }
-  ],
-  dataDodania: "2024-01-10",
-  typ: "klient_indywidualny",
-  status: "aktywny"
+    produkty: [
+      {
+        id: "PROD-001",
+        nazwa: "Pakiet Basic",
+        opis: "Podstawowy pakiet usług",
+        cena: 99.99,
+        waluta: "PLN",
+        dataZakupu: "2024-04-01"
+      }
+    ],
+    uslugi: [],
+    dataDodania: "2024-04-01",
+    typ: "klient_indywidualny",
+    status: "nowy"
+  }
 };
+
+// Domyślny klient (fallback)
+const mockCustomer = mockCustomers["KL-001"];
 
 // ============================================
 // PUBLICZNE ENDPOINTY
@@ -98,11 +150,12 @@ app.get('/', (req, res) => {
         refresh: "POST /api/auth/refresh"
       },
       protected: {
-        customer: "GET /api/customer",
-        customerInfo: "GET /api/customer/info",
-        products: "GET /api/customer/products",
-        services: "GET /api/customer/services"
-      }
+        customer: "GET /api/customer?id=KL-001",
+        customerInfo: "GET /api/customer/info?id=KL-001",
+        products: "GET /api/customer/products?id=KL-001",
+        services: "GET /api/customer/services?id=KL-001"
+      },
+      dostepneKlienciDo: Object.keys(mockCustomers).join(", ")
     }
   });
 });
@@ -197,53 +250,146 @@ app.post('/api/auth/refresh', verifyRefreshToken, (req, res) => {
 // CHRONIONE ENDPOINTY (wymagają JWT token)
 // ============================================
 
-// Get complete customer data
+/**
+ * Get complete customer data by ID
+ * GET /api/customer?id=KL-001
+ * lub bez id zwraca domyślnego klienta
+ */
 app.get('/api/customer', verifyToken, (req, res) => {
-  res.json({
-    success: true,
-    data: mockCustomer,
-    timestamp: new Date().toISOString(),
-    authenticatedAs: req.user.username
-  });
+  try {
+    const customerId = req.query.id || 'KL-001';
+    const customer = mockCustomers[customerId] || mockCustomer;
+
+    if (!mockCustomers[customerId]) {
+      return res.status(404).json({
+        success: false,
+        error: 'Klient nie znaleziony',
+        message: `Klient z ID: ${customerId} nie istnieje w bazie danych`,
+        dostepneKlienci: Object.keys(mockCustomers)
+      });
+    }
+
+    res.json({
+      success: true,
+      data: customer,
+      timestamp: new Date().toISOString(),
+      authenticatedAs: req.user.username
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Błąd serwera',
+      message: error.message
+    });
+  }
 });
 
-// Get only customer products
+/**
+ * Get only customer products by ID
+ * GET /api/customer/products?id=KL-001
+ */
 app.get('/api/customer/products', verifyToken, (req, res) => {
-  res.json({
-    success: true,
-    nrKlienta: mockCustomer.nrKlienta,
-    produkty: mockCustomer.produkty,
-    iloscProduktow: mockCustomer.produkty.length,
-    timestamp: new Date().toISOString(),
-    authenticatedAs: req.user.username
-  });
+  try {
+    const customerId = req.query.id || 'KL-001';
+    const customer = mockCustomers[customerId];
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        error: 'Klient nie znaleziony',
+        message: `Klient z ID: ${customerId} nie istnieje w bazie danych`,
+        dostepneKlienci: Object.keys(mockCustomers)
+      });
+    }
+
+    res.json({
+      success: true,
+      nrKlienta: customer.nrKlienta,
+      produkty: customer.produkty,
+      iloscProduktow: customer.produkty.length,
+      timestamp: new Date().toISOString(),
+      authenticatedAs: req.user.username
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Błąd serwera',
+      message: error.message
+    });
+  }
 });
 
-// Get only customer services
+/**
+ * Get only customer services by ID
+ * GET /api/customer/services?id=KL-001
+ */
 app.get('/api/customer/services', verifyToken, (req, res) => {
-  res.json({
-    success: true,
-    nrKlienta: mockCustomer.nrKlienta,
-    uslugi: mockCustomer.uslugi,
-    iloscUslug: mockCustomer.uslugi.length,
-    timestamp: new Date().toISOString(),
-    authenticatedAs: req.user.username
-  });
+  try {
+    const customerId = req.query.id || 'KL-001';
+    const customer = mockCustomers[customerId];
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        error: 'Klient nie znaleziony',
+        message: `Klient z ID: ${customerId} nie istnieje w bazie danych`,
+        dostepneKlienci: Object.keys(mockCustomers)
+      });
+    }
+
+    res.json({
+      success: true,
+      nrKlienta: customer.nrKlienta,
+      uslugi: customer.uslugi,
+      iloscUslug: customer.uslugi.length,
+      timestamp: new Date().toISOString(),
+      authenticatedAs: req.user.username
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Błąd serwera',
+      message: error.message
+    });
+  }
 });
 
-// Get customer basic info
+/**
+ * Get customer basic info by ID
+ * GET /api/customer/info?id=KL-001
+ */
 app.get('/api/customer/info', verifyToken, (req, res) => {
-  res.json({
-    success: true,
-    nrKlienta: mockCustomer.nrKlienta,
-    imie: mockCustomer.imie,
-    nazwisko: mockCustomer.nazwisko,
-    email: mockCustomer.email,
-    telefon: mockCustomer.telefon,
-    status: mockCustomer.status,
-    timestamp: new Date().toISOString(),
-    authenticatedAs: req.user.username
-  });
+  try {
+    const customerId = req.query.id || 'KL-001';
+    const customer = mockCustomers[customerId];
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        error: 'Klient nie znaleziony',
+        message: `Klient z ID: ${customerId} nie istnieje w bazie danych`,
+        dostepneKlienci: Object.keys(mockCustomers)
+      });
+    }
+
+    res.json({
+      success: true,
+      nrKlienta: customer.nrKlienta,
+      imie: customer.imie,
+      nazwisko: customer.nazwisko,
+      email: customer.email,
+      telefon: customer.telefon,
+      status: customer.status,
+      timestamp: new Date().toISOString(),
+      authenticatedAs: req.user.username
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Błąd serwera',
+      message: error.message
+    });
+  }
 });
 
 // Error handling middleware
@@ -263,10 +409,14 @@ app.listen(PORT, () => {
   console.log(`   - POST /api/auth/login - logowanie`);
   console.log(`   - POST /api/auth/refresh - odświeżanie tokenu`);
   console.log(`\n🔒 ENDPOINTY CHRONIONE (wymagają JWT):`);
-  console.log(`   - GET /api/customer - pełne dane klienta`);
-  console.log(`   - GET /api/customer/info - podstawowe info`);
-  console.log(`   - GET /api/customer/products - lista produktów`);
-  console.log(`   - GET /api/customer/services - lista usług`);
+  console.log(`   - GET /api/customer?id=KL-001 - pełne dane klienta`);
+  console.log(`   - GET /api/customer/info?id=KL-001 - podstawowe info`);
+  console.log(`   - GET /api/customer/products?id=KL-001 - lista produktów`);
+  console.log(`   - GET /api/customer/services?id=KL-001 - lista usług`);
+  console.log(`\n👥 DOSTĘPNI KLIENCI:`);
+  Object.keys(mockCustomers).forEach(id => {
+    console.log(`   - ${id}: ${mockCustomers[id].imie} ${mockCustomers[id].nazwisko}`);
+  });
   console.log(`\n📝 DEMO DANE LOGOWANIA:`);
   console.log(`   - Username: ${process.env.DEMO_USERNAME || 'user'}`);
   console.log(`   - Password: ${process.env.DEMO_PASSWORD || 'password123'}`);
