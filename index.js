@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Mock customer data - baza klientów
+// Mock customer data - rozszerzona baza klientów
 const mockCustomers = {
   "KL-001": {
     nrKlienta: "KL-001",
@@ -87,6 +87,14 @@ const mockCustomers = {
         cena: 999.99,
         waluta: "PLN",
         dataZakupu: "2024-03-10"
+      },
+      {
+        id: "PROD-004",
+        nazwa: "Rozszerzenie API",
+        opis: "Dostęp do zaawansowanych API",
+        cena: 199.99,
+        waluta: "PLN",
+        dataZakupu: "2024-04-05"
       }
     ],
     uslugi: [
@@ -96,6 +104,20 @@ const mockCustomers = {
         opis: "Zaawansowane raporty i analizy",
         status: "aktywna",
         dataRozpoczecia: "2024-03-01"
+      },
+      {
+        id: "USL-004",
+        nazwa: "Konsultacje biznesowe",
+        opis: "Dostęp do zespołu ekspertów",
+        status: "aktywna",
+        dataRozpoczecia: "2024-03-15"
+      },
+      {
+        id: "USL-005",
+        nazwa: "Integracja systemów",
+        opis: "Asystencja przy integracji z istniejącymi systemami",
+        status: "zaplanowana",
+        dataRozpoczecia: "2024-07-01"
       }
     ],
     dataDodania: "2024-02-15",
@@ -124,10 +146,117 @@ const mockCustomers = {
         dataZakupu: "2024-04-01"
       }
     ],
-    uslugi: [],
+    uslugi: [
+      {
+        id: "USL-006",
+        nazwa: "Wsparcie email",
+        opis: "Wsparcie techniczne via email",
+        status: "aktywna",
+        dataRozpoczecia: "2024-04-01"
+      }
+    ],
     dataDodania: "2024-04-01",
     typ: "klient_indywidualny",
     status: "nowy"
+  },
+  "KL-004": {
+    nrKlienta: "KL-004",
+    imie: "Anna",
+    nazwisko: "Wiśniewska",
+    email: "anna.w@example.com",
+    telefon: "+48 111 222 333",
+    adres: {
+      ulica: "ul. Zawalna 8",
+      miasto: "Wrocław",
+      kodPocztowy: "50-082",
+      kraj: "Polska"
+    },
+    produkty: [
+      {
+        id: "PROD-005",
+        nazwa: "Pakiet Startup",
+        opis: "Pakiet dla startupów",
+        cena: 149.99,
+        waluta: "PLN",
+        dataZakupu: "2024-05-10"
+      },
+      {
+        id: "PROD-002",
+        nazwa: "Pakiet Premium",
+        opis: "Zaawansowany pakiet z dodatkowymi funkcjami",
+        cena: 299.99,
+        waluta: "PLN",
+        dataZakupu: "2024-06-01"
+      }
+    ],
+    uslugi: [
+      {
+        id: "USL-007",
+        nazwa: "Szkolenia zespołu",
+        opis: "Szkolenia dla zespołu w zakresie użytkowania platformy",
+        status: "aktywna",
+        dataRozpoczecia: "2024-05-15"
+      },
+      {
+        id: "USL-008",
+        nazwa: "Dedykowany account manager",
+        opis: "Przydzielony menedżer konta",
+        status: "aktywna",
+        dataRozpoczecia: "2024-05-20"
+      }
+    ],
+    dataDodania: "2024-05-08",
+    typ: "klient_biznesowy",
+    status: "aktywny"
+  },
+  "KL-005": {
+    nrKlienta: "KL-005",
+    imie: "Robert",
+    nazwisko: "Majewski",
+    email: "r.majewski@example.com",
+    telefon: "+48 333 444 555",
+    adres: {
+      ulica: "ul. Floriańska 22",
+      miasto: "Poznań",
+      kodPocztowy: "61-001",
+      kraj: "Polska"
+    },
+    produkty: [
+      {
+        id: "PROD-003",
+        nazwa: "Pakiet Enterprise",
+        opis: "Pakiet dla dużych przedsiębiorstw",
+        cena: 999.99,
+        waluta: "PLN",
+        dataZakupu: "2024-05-25"
+      }
+    ],
+    uslugi: [
+      {
+        id: "USL-003",
+        nazwa: "Raportowanie analityczne",
+        opis: "Zaawansowane raporty i analizy",
+        status: "aktywna",
+        dataRozpoczecia: "2024-06-01"
+      },
+      {
+        id: "USL-009",
+        nazwa: "Monitoring 24/7",
+        opis: "Ciągłe monitorowanie systemu",
+        status: "aktywna",
+        dataRozpoczecia: "2024-05-25"
+      },
+      {
+        id: "USL-010",
+        nazwa: "Disaster Recovery",
+        opis: "Plan odzyskiwania po awariach",
+        status: "aktywna",
+        dataRozpoczecia: "2024-06-01"
+      }
+    ],
+    dataDodania: "2024-05-20",
+    typ: "klient_biznesowy",
+    status: "premium"
   }
 };
 
@@ -150,12 +279,13 @@ app.get('/', (req, res) => {
         refresh: "POST /api/auth/refresh"
       },
       protected: {
+        customers: "GET /api/customers",
         customer: "GET /api/customer?id=KL-001",
         customerInfo: "GET /api/customer/info?id=KL-001",
         products: "GET /api/customer/products?id=KL-001",
         services: "GET /api/customer/services?id=KL-001"
       },
-      dostepneKlienciDo: Object.keys(mockCustomers).join(", ")
+      dostepneKlienci: Object.keys(mockCustomers).join(", ")
     }
   });
 });
@@ -251,6 +381,38 @@ app.post('/api/auth/refresh', verifyRefreshToken, (req, res) => {
 // ============================================
 
 /**
+ * Get all customers list
+ * GET /api/customers
+ */
+app.get('/api/customers', verifyToken, (req, res) => {
+  try {
+    const customersList = Object.values(mockCustomers).map(customer => ({
+      nrKlienta: customer.nrKlienta,
+      imie: customer.imie,
+      nazwisko: customer.nazwisko,
+      email: customer.email,
+      status: customer.status,
+      typ: customer.typ,
+      dataDodania: customer.dataDodania
+    }));
+
+    res.json({
+      success: true,
+      iloscKlientow: customersList.length,
+      klienci: customersList,
+      timestamp: new Date().toISOString(),
+      authenticatedAs: req.user.username
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Błąd serwera',
+      message: error.message
+    });
+  }
+});
+
+/**
  * Get complete customer data by ID
  * GET /api/customer?id=KL-001
  * lub bez id zwraca domyślnego klienta
@@ -258,16 +420,19 @@ app.post('/api/auth/refresh', verifyRefreshToken, (req, res) => {
 app.get('/api/customer', verifyToken, (req, res) => {
   try {
     const customerId = req.query.id || 'KL-001';
-    const customer = mockCustomers[customerId] || mockCustomer;
-
+    
+    // Sprawdzenie czy klient istnieje
     if (!mockCustomers[customerId]) {
       return res.status(404).json({
         success: false,
         error: 'Klient nie znaleziony',
         message: `Klient z ID: ${customerId} nie istnieje w bazie danych`,
-        dostepneKlienci: Object.keys(mockCustomers)
+        dostepneKlienci: Object.keys(mockCustomers),
+        przyklad: '/api/customer?id=KL-001'
       });
     }
+
+    const customer = mockCustomers[customerId];
 
     res.json({
       success: true,
@@ -291,20 +456,25 @@ app.get('/api/customer', verifyToken, (req, res) => {
 app.get('/api/customer/products', verifyToken, (req, res) => {
   try {
     const customerId = req.query.id || 'KL-001';
-    const customer = mockCustomers[customerId];
-
-    if (!customer) {
+    
+    // Sprawdzenie czy klient istnieje
+    if (!mockCustomers[customerId]) {
       return res.status(404).json({
         success: false,
         error: 'Klient nie znaleziony',
         message: `Klient z ID: ${customerId} nie istnieje w bazie danych`,
-        dostepneKlienci: Object.keys(mockCustomers)
+        dostepneKlienci: Object.keys(mockCustomers),
+        przyklad: '/api/customer/products?id=KL-001'
       });
     }
+
+    const customer = mockCustomers[customerId];
 
     res.json({
       success: true,
       nrKlienta: customer.nrKlienta,
+      imie: customer.imie,
+      nazwisko: customer.nazwisko,
       produkty: customer.produkty,
       iloscProduktow: customer.produkty.length,
       timestamp: new Date().toISOString(),
@@ -326,20 +496,25 @@ app.get('/api/customer/products', verifyToken, (req, res) => {
 app.get('/api/customer/services', verifyToken, (req, res) => {
   try {
     const customerId = req.query.id || 'KL-001';
-    const customer = mockCustomers[customerId];
-
-    if (!customer) {
+    
+    // Sprawdzenie czy klient istnieje
+    if (!mockCustomers[customerId]) {
       return res.status(404).json({
         success: false,
         error: 'Klient nie znaleziony',
         message: `Klient z ID: ${customerId} nie istnieje w bazie danych`,
-        dostepneKlienci: Object.keys(mockCustomers)
+        dostepneKlienci: Object.keys(mockCustomers),
+        przyklad: '/api/customer/services?id=KL-001'
       });
     }
+
+    const customer = mockCustomers[customerId];
 
     res.json({
       success: true,
       nrKlienta: customer.nrKlienta,
+      imie: customer.imie,
+      nazwisko: customer.nazwisko,
       uslugi: customer.uslugi,
       iloscUslug: customer.uslugi.length,
       timestamp: new Date().toISOString(),
@@ -361,16 +536,19 @@ app.get('/api/customer/services', verifyToken, (req, res) => {
 app.get('/api/customer/info', verifyToken, (req, res) => {
   try {
     const customerId = req.query.id || 'KL-001';
-    const customer = mockCustomers[customerId];
-
-    if (!customer) {
+    
+    // Sprawdzenie czy klient istnieje
+    if (!mockCustomers[customerId]) {
       return res.status(404).json({
         success: false,
         error: 'Klient nie znaleziony',
         message: `Klient z ID: ${customerId} nie istnieje w bazie danych`,
-        dostepneKlienci: Object.keys(mockCustomers)
+        dostepneKlienci: Object.keys(mockCustomers),
+        przyklad: '/api/customer/info?id=KL-001'
       });
     }
+
+    const customer = mockCustomers[customerId];
 
     res.json({
       success: true,
@@ -379,7 +557,10 @@ app.get('/api/customer/info', verifyToken, (req, res) => {
       nazwisko: customer.nazwisko,
       email: customer.email,
       telefon: customer.telefon,
+      adres: customer.adres,
       status: customer.status,
+      typ: customer.typ,
+      dataDodania: customer.dataDodania,
       timestamp: new Date().toISOString(),
       authenticatedAs: req.user.username
     });
@@ -397,7 +578,8 @@ app.use((req, res) => {
   res.status(404).json({
     success: false,
     error: "Endpoint nie znaleziony",
-    path: req.path
+    path: req.path,
+    message: "Sprawdź dostępne endpointy na GET /"
   });
 });
 
@@ -409,15 +591,23 @@ app.listen(PORT, () => {
   console.log(`   - POST /api/auth/login - logowanie`);
   console.log(`   - POST /api/auth/refresh - odświeżanie tokenu`);
   console.log(`\n🔒 ENDPOINTY CHRONIONE (wymagają JWT):`);
+  console.log(`   - GET /api/customers - lista wszystkich klientów`);
   console.log(`   - GET /api/customer?id=KL-001 - pełne dane klienta`);
   console.log(`   - GET /api/customer/info?id=KL-001 - podstawowe info`);
   console.log(`   - GET /api/customer/products?id=KL-001 - lista produktów`);
   console.log(`   - GET /api/customer/services?id=KL-001 - lista usług`);
   console.log(`\n👥 DOSTĘPNI KLIENCI:`);
   Object.keys(mockCustomers).forEach(id => {
-    console.log(`   - ${id}: ${mockCustomers[id].imie} ${mockCustomers[id].nazwisko}`);
+    const customer = mockCustomers[id];
+    console.log(`   - ${id}: ${customer.imie} ${customer.nazwisko} (${customer.typ})`);
   });
   console.log(`\n📝 DEMO DANE LOGOWANIA:`);
   console.log(`   - Username: ${process.env.DEMO_USERNAME || 'user'}`);
   console.log(`   - Password: ${process.env.DEMO_PASSWORD || 'password123'}`);
+  console.log(`\n💡 PRZYKŁADOWE ZAPYTANIA:`);
+  console.log(`   1. curl -X POST http://localhost:${PORT}/api/auth/login \\`);
+  console.log(`      -H "Content-Type: application/json" \\`);
+  console.log(`      -d '{"username":"user","password":"password123"}'`);
+  console.log(`   2. curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:${PORT}/api/customers`);
+  console.log(`   3. curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:${PORT}/api/customer?id=KL-002`);
 });
